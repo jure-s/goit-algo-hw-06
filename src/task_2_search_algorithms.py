@@ -3,38 +3,39 @@ from task_1_graph_model import create_transport_network
 
 def dfs_path(graph, start, goal):
     """
-    Пошук у глибину (DFS) для знаходження шляху від start до goal.
+    Реалізація пошуку в глибину (DFS) для знаходження шляху від start до goal.
     """
-    if start not in graph or goal not in graph:
-        return None
-
-    try:
-        predecessors = nx.dfs_predecessors(graph, source=start)
-        if goal not in predecessors:
-            return None
-        
-        path = [goal]
-        while path[-1] in predecessors:
-            path.append(predecessors[path[-1]])
-        path.reverse()
-        return path
-    except KeyError:
-        return None
+    stack = [(start, [start])]
+    visited = set()
+    
+    while stack:
+        node, path = stack.pop()
+        if node == goal:
+            return path
+        if node not in visited:
+            visited.add(node)
+            for neighbor in reversed(list(graph.neighbors(node))):  # Додаємо у зворотному порядку для коректного порядку обходу
+                if neighbor not in visited:
+                    stack.append((neighbor, path + [neighbor]))
+    return None
 
 def bfs_path(graph, start, goal):
     """
-    Пошук у ширину (BFS) для знаходження шляху від start до goal.
+    Реалізація пошуку в ширину (BFS) для знаходження шляху від start до goal.
     """
-    if start not in graph or goal not in graph:
-        return None
-
-    try:
-        path = list(nx.shortest_path(graph, source=start, target=goal))
-        return path
-    except nx.NetworkXNoPath:
-        return None
-    except nx.NodeNotFound:
-        return None
+    queue = [(start, [start])]
+    visited = set()
+    
+    while queue:
+        node, path = queue.pop(0)
+        if node == goal:
+            return path
+        if node not in visited:
+            visited.add(node)
+            for neighbor in graph.neighbors(node):
+                if neighbor not in visited:
+                    queue.append((neighbor, path + [neighbor]))
+    return None
 
 def compare_search_algorithms(graph, start, goal):
     dfs_result = dfs_path(graph, start, goal)
@@ -44,12 +45,16 @@ def compare_search_algorithms(graph, start, goal):
     print(f"BFS шлях з {start} до {goal}: {bfs_result}")
     
     if dfs_result == bfs_result:
-        print("Шляхи збігаються.")
+        print("Обидва алгоритми знайшли однаковий шлях.")
     else:
-        print("Шляхи відрізняються через особливості алгоритмів.")
+        print("Різниця між DFS і BFS:")
+        print("- DFS досліджує шлях максимально глибоко перед поверненням назад, тому шлях може бути довшим.")
+        print("- BFS перевіряє всі можливі маршрути рівня за рівнем, гарантуючи найкоротший шлях у кількості кроків.")
+
+def main():
+    G = create_transport_network()
+    start, goal = "A", "F"
+    compare_search_algorithms(G, start, goal)
 
 if __name__ == "__main__":
-    G = create_transport_network()
-    start_node = "A"
-    goal_node = "F"
-    compare_search_algorithms(G, start_node, goal_node)
+    main()
