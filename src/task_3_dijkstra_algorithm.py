@@ -1,26 +1,41 @@
-import sys
-import os
-import networkx as nx
+import heapq
 from task_1_graph_model import create_weighted_transport_network
 
 def dijkstra_shortest_path(graph, start, goal):
     """
-    Використання алгоритму Дейкстри для знаходження найкоротшого шляху.
+    Реалізація алгоритму Дейкстри для знаходження найкоротшого шляху в зваженому графі.
     """
-    try:
-        path = nx.dijkstra_path(graph, source=start, target=goal, weight='weight')
-        distance = nx.dijkstra_path_length(graph, source=start, target=goal, weight='weight')
-        return path, distance
-    except nx.NetworkXNoPath:
-        return None, float('inf')
+    priority_queue = [(0, start, [])]  # Кортежі: (відстань, поточна вершина, шлях)
+    visited = set()
+    shortest_paths = {node: float('inf') for node in graph.nodes}
+    shortest_paths[start] = 0
+    
+    while priority_queue:
+        current_distance, current_node, path = heapq.heappop(priority_queue)
+        
+        if current_node in visited:
+            continue
+        
+        visited.add(current_node)
+        path = path + [current_node]
+        
+        if current_node == goal:
+            return path, current_distance
+        
+        for neighbor, attributes in graph[current_node].items():
+            weight = attributes['weight']
+            distance = current_distance + weight
+            if distance < shortest_paths[neighbor]:
+                shortest_paths[neighbor] = distance
+                heapq.heappush(priority_queue, (distance, neighbor, path))
+    
+    return None, float('inf')
+
+def main():
+    G = create_weighted_transport_network()
+    start, goal = "A", "F"
+    path, distance = dijkstra_shortest_path(G, start, goal)
+    print(f"Найкоротший шлях з {start} до {goal}: {path} з відстанню {distance}")
 
 if __name__ == "__main__":
-    # Додаємо шлях до кореневого каталогу для коректного імпорту
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-    G = create_weighted_transport_network()
-    start_node = "A"
-    goal_node = "F"
-
-    path, distance = dijkstra_shortest_path(G, start_node, goal_node)
-    print(f"Найкоротший шлях з {start_node} до {goal_node}: {path} з відстанню {distance}")
+    main()
